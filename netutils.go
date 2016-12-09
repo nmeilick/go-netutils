@@ -86,7 +86,11 @@ func (ai *ResolvedAddressInfo) IsNetwork() bool {
 }
 func (ai *ResolvedAddressInfo) HostPort() (result string) {
 	if ai.HasIP() && ai.HasPort() {
-		result = fmt.Sprintf("%s:%d", ai.IP.String(), ai.Port)
+		if ai.IP.To16() != nil {
+			result = fmt.Sprintf("[%s]:%d", ai.IP.String(), ai.Port)
+		} else {
+			result = fmt.Sprintf("%s:%d", ai.IP.String(), ai.Port)
+		}
 	}
 	return
 }
@@ -225,7 +229,7 @@ func ParseAddress(text string) (*AddressInfo, error) {
 	if nm != "" {
 		nm, rest := getAndRemoveMatch(nm, regexp.MustCompile("/[0-9.]+"))
 
-		nm = strings.TrimPrefix(nm, "/")
+		nm = strings.TrimSpace(strings.TrimPrefix(nm, "/"))
 		if ip := net.ParseIP(nm); ip != nil {
 			if bits, err := Netmask2CIDR(ip.String()); err != nil {
 				return nil, errors.New("Not a valid netmask: " + nm)
@@ -270,8 +274,8 @@ func ParseAddress(text string) (*AddressInfo, error) {
 	if !ai.HasPort() {
 		r := regexp.MustCompile(":+([^:\\[\\]]*)$")
 		if m := r.FindStringSubmatch(text); len(m) > 1 {
-			text = r.ReplaceAllString(text, "")
-			if port := m[1]; port != "" {
+			text = strings.TrimSpace(r.ReplaceAllString(text, ""))
+			if port := strings.TrimSpace(m[1]); port != "" {
 				nport, err := net.LookupPort("tcp", port)
 				if err != nil {
 					nport, err = net.LookupPort("udp", port)
