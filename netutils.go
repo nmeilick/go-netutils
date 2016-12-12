@@ -86,7 +86,7 @@ func (ai *ResolvedAddressInfo) IsNetwork() bool {
 }
 func (ai *ResolvedAddressInfo) HostPort() (result string) {
 	if ai.HasIP() && ai.HasPort() {
-		if ai.IP.To16() != nil {
+		if ai.IP.To4() == nil {
 			result = fmt.Sprintf("[%s]:%d", ai.IP.String(), ai.Port)
 		} else {
 			result = fmt.Sprintf("%s:%d", ai.IP.String(), ai.Port)
